@@ -1,0 +1,83 @@
+# ARISE Docker Compose
+# ====================
+# Runs the complete ARISE stack locally:
+# - FastAPI backend (port 8000)
+# - React frontend (port 3000)
+# - PostgreSQL database (port 5432)
+#
+# Usage:
+#   docker-compose up --build
+#   docker-compose down -v  (removes volumes)
+
+version: '3.9'
+
+services:
+
+  # ── PostgreSQL Database ──────────────────────────────────────────────────────
+  db:
+    image: postgres:15-alpine
+    container_name: arise_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: arise_user
+      POSTGRES_PASSWORD: arise_password
+      POSTGRES_DB: arise_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U arise_user -d arise_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── FastAPI Backend ──────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: arise_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://arise_user:arise_password@db:5432/arise_db
+      - SECRET_KEY=${SECRET_KEY:-arise-dev-secret-change-in-production}
+      - DEBUG=${DEBUG:-false}
+      - FRONTEND_URL=http://localhost:3000
+      - HUAWEI_ACCESS_KEY=${HUAWEI_ACCESS_KEY:-placeholder}
+      - HUAWEI_SECRET_KEY=${HUAWEI_SECRET_KEY:-placeholder}
+      - HUAWEI_PROJECT_ID=${HUAWEI_PROJECT_ID:-placeholder}
+      - HUAWEI_REGION=${HUAWEI_REGION:-af-south-1}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    command: >
+      sh -c "
+        python -m backend.seed &&
+        uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+      "
+
+  # ── React Frontend ───────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: arise_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000/api/v1
+      - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+volumes:
+  postgres_data:
