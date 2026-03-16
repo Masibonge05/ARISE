@@ -1,56 +1,58 @@
-import axios from "axios";
+// src/api.js
+// Quick mock API for frontend-only deployment
 
-const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || "http://localhost:8000/api/v1",
-  timeout: 30000,
-  headers: { "Content-Type": "application/json" },
-});
+// Mock user data
+const mockUser = {
+  id: 1,
+  name: "Sphiwe Demo",
+  ecs_score: 50,
+  persona: "Sphiwe",
+};
 
-// ── Request interceptor — attach token ────────────────────────────────────────
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("arise_token");
-    if (token) config.headers.Authorization = `Bearer ${token}`;
-    return config;
+// Mock job feed
+const mockJobs = [
+  { id: 1, title: "Demo Job 1", match: 87 },
+  { id: 2, title: "Demo Job 2", match: 92 },
+];
+
+// Simulate network delay
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const api = {
+  get: async (url) => {
+    await delay(200); // simulate network
+    if (url.endsWith("/users/me")) return { data: mockUser };
+    if (url.endsWith("/jobs")) return { data: mockJobs };
+    return { data: {} };
   },
-  (error) => Promise.reject(error)
-);
+  post: async (url, payload) => {
+    await delay(200);
+    console.log("POST to", url, payload);
+    return { data: { success: true } };
+  },
+  put: async (url, payload) => {
+    await delay(200);
+    console.log("PUT to", url, payload);
+    return { data: { success: true } };
+  },
+  delete: async (url) => {
+    await delay(200);
+    console.log("DELETE to", url);
+    return { data: { success: true } };
+  },
+};
 
-// ── Response interceptor — handle errors globally ─────────────────────────────
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    const status = error.response?.status;
-    if (status === 401) {
-      localStorage.removeItem("arise_token");
-      if (window.location.pathname !== "/login") window.location.href = "/login";
-    }
-    if (status === 429) console.warn("ARISE: Rate limit — slow down");
-    if (status >= 500) console.error("ARISE: Server error", status, error.config?.url);
-    return Promise.reject(error);
-  }
-);
+// Optional: mock upload functions
+export const uploadBase64 = async (endpoint, file, documentType) => {
+  await delay(200);
+  console.log("Mock uploadBase64", endpoint, documentType);
+  return { data: { url: "https://via.placeholder.com/150" } };
+};
 
-// ── Upload file as base64 (Huawei OCR) ────────────────────────────────────────
-export const uploadBase64 = (endpoint, file, documentType) =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      try {
-        const base64 = e.target.result.split(",")[1];
-        resolve(await api.post(endpoint, { file_base64: base64, document_type: documentType }));
-      } catch (err) { reject(err); }
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-
-// ── Upload multipart form ─────────────────────────────────────────────────────
-export const uploadFile = (endpoint, file, extraFields = {}) => {
-  const fd = new FormData();
-  fd.append("file", file);
-  Object.entries(extraFields).forEach(([k, v]) => fd.append(k, v));
-  return api.post(endpoint, fd, { headers: { "Content-Type": "multipart/form-data" } });
+export const uploadFile = async (endpoint, file, extraFields = {}) => {
+  await delay(200);
+  console.log("Mock uploadFile", endpoint, extraFields);
+  return { data: { url: "https://via.placeholder.com/150" } };
 };
 
 export default api;
