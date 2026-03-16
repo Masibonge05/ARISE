@@ -1,126 +1,362 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
-// ─── COURSES PAGE ─────────────────────────────────────────────────────────────
 const COURSES = [
-  { id: "c1", title: "UI/UX Design Fundamentals", provider: "Google Career Certificates", duration: "6 weeks", level: "Beginner", skill: "UI Design", ecs: 20, free: true, url: "https://grow.google/certificates/" },
-  { id: "c2", title: "Python Programming Essentials", provider: "Huawei ICT Academy", duration: "4 weeks", level: "Beginner", skill: "Python", ecs: 20, free: true, url: "https://e.huawei.com/en/talent/" },
-  { id: "c3", title: "Business Registration & CIPC", provider: "SEDA e-Learning", duration: "2 hours", level: "Beginner", skill: "Business Formalization", ecs: 15, free: true, url: "https://www.seda.org.za" },
-  { id: "c4", title: "Social Media Marketing for SMEs", provider: "Meta Blueprint", duration: "3 weeks", level: "Beginner", skill: "Social Media Marketing", ecs: 15, free: true, url: "https://www.facebook.com/business/learn" },
-  { id: "c5", title: "Financial Management for Entrepreneurs", provider: "NYDA Business Hub", duration: "5 weeks", level: "Intermediate", skill: "Financial Planning", ecs: 20, free: true, url: "https://www.nyda.gov.za" },
-  { id: "c6", title: "Figma for UI Designers", provider: "Figma Academy", duration: "3 weeks", level: "Intermediate", skill: "Figma", ecs: 20, free: true, url: "https://www.figma.com/resources/learn-design/" },
-  { id: "c7", title: "Flutter Mobile Development", provider: "Huawei Developer Academy", duration: "8 weeks", level: "Intermediate", skill: "Flutter", ecs: 25, free: false, url: "https://developer.huawei.com/consumer/en/training/" },
-  { id: "c8", title: "Pitch Deck Masterclass", provider: "Founders Institute SA", duration: "4 hours", level: "Intermediate", skill: "Pitching", ecs: 15, free: false, url: "#" },
+  { id:"c1", title:"UI/UX Design Fundamentals", provider:"Google Career Certificates", duration:"6 weeks", level:"Beginner", skill:"UI Design", category:"design", ecs:20, free:true, url:"https://grow.google/certificates/" },
+  { id:"c2", title:"Python Programming Essentials", provider:"Huawei ICT Academy", duration:"4 weeks", level:"Beginner", skill:"Python", category:"technical", ecs:20, free:true, url:"https://e.huawei.com/en/talent/" },
+  { id:"c3", title:"Business Registration & CIPC", provider:"SEDA e-Learning", duration:"2 hours", level:"Beginner", skill:"Business Formalization", category:"business", ecs:15, free:true, url:"https://www.seda.org.za" },
+  { id:"c4", title:"Social Media Marketing for SMEs", provider:"Meta Blueprint", duration:"3 weeks", level:"Beginner", skill:"Digital Marketing", category:"marketing", ecs:15, free:true, url:"https://www.facebook.com/business/learn" },
+  { id:"c5", title:"Financial Management Basics", provider:"NYDA Business Hub", duration:"5 weeks", level:"Intermediate", skill:"Financial Planning", category:"business", ecs:20, free:true, url:"https://www.nyda.gov.za" },
+  { id:"c6", title:"Figma for UI Designers", provider:"Figma Academy", duration:"3 weeks", level:"Intermediate", skill:"Figma", category:"design", ecs:20, free:true, url:"https://www.figma.com/resources/learn-design/" },
+  { id:"c7", title:"Flutter Mobile Development", provider:"Huawei Developer Academy", duration:"8 weeks", level:"Intermediate", skill:"Flutter", category:"technical", ecs:25, free:false, url:"https://developer.huawei.com/consumer/en/training/" },
+  { id:"c8", title:"Pitch Deck Masterclass", provider:"Founders Institute SA", duration:"4 hours", level:"Intermediate", skill:"Pitching", category:"business", ecs:15, free:false, url:"#"},
+  { id:"c9", title:"JavaScript for Beginners", provider:"freeCodeCamp", duration:"5 weeks", level:"Beginner", skill:"JavaScript", category:"technical", ecs:20, free:true, url:"https://www.freecodecamp.org"},
+  { id:"c10", title:"isiZulu for Business", provider:"ARISE Language Centre", duration:"4 weeks", level:"Beginner", skill:"isiZulu", category:"language", ecs:20, free:true, url:"#"},
+  { id:"c11", title:"Grant Writing Fundamentals", provider:"SEDA", duration:"6 hours", level:"Beginner", skill:"Grant Writing", category:"business", ecs:15, free:true, url:"https://www.seda.org.za"},
+  { id:"c12", title:"Photography for Freelancers", provider:"Coursera", duration:"3 weeks", level:"Beginner", skill:"Photography", category:"creative", ecs:15, free:false, url:"https://www.coursera.org"},
 ];
 
-export function CoursesPage() {
-  const [filter, setFilter] = useState("all");
-  const [enrolled, setEnrolled] = useState([]);
+const CATEGORIES = ["all","technical","design","business","marketing","language","creative"];
 
-  const filtered = filter === "free" ? COURSES.filter(c => c.free) : filter === "enrolled" ? COURSES.filter(c => enrolled.includes(c.id)) : COURSES;
+export default function CoursesPage() {
 
-  return (
-    <div style={styles.page}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap'); * { box-sizing:border-box; } .course-card:hover { border-color:rgba(255,107,53,0.3) !important; transform:translateY(-2px); } @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }`}</style>
-      <div style={styles.inner}>
-        <div style={{ animation: "fadeUp 0.4s ease forwards" }}>
-          <h1 style={styles.title}>Courses & Learning</h1>
-          <p style={{ fontSize: 14, color: "#888" }}>Complete courses to add verified skills to your TrustID · Each completion awards ECS points</p>
+  const { user } = useAuth();
+  const [enrolled,setEnrolled] = useState([]);
+  const [filter,setFilter] = useState("all");
+  const [freeOnly,setFreeOnly] = useState(false);
+  const [search,setSearch] = useState("");
+
+  const filtered = COURSES.filter(c=>{
+    if(filter !== "all" && c.category !== filter) return false;
+    if(freeOnly && !c.free) return false;
+    if(search && !c.title.toLowerCase().includes(search.toLowerCase()) &&
+       !c.skill.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  });
+
+  const totalECS = enrolled.reduce((s,id)=> s + (COURSES.find(c=>c.id===id)?.ecs || 0),0);
+
+  return(
+    <div style={S.page}>
+
+      <div style={S.inner}>
+
+        <h1 style={S.title}>Courses & Learning</h1>
+        <p style={{fontSize:14,color:"#888"}}>
+          Complete courses to add verified skills to your TrustID
+        </p>
+
+        {enrolled.length>0 && (
+          <div style={{display:"flex",gap:12}}>
+            <div style={S.statBox}>
+              <div style={S.statValue}>{enrolled.length}</div>
+              <div style={S.statLabel}>ENROLLED</div>
+            </div>
+
+            <div style={S.statBox}>
+              <div style={S.statValue}>+{totalECS}</div>
+              <div style={S.statLabel}>ECS</div>
+            </div>
+          </div>
+        )}
+
+        <div style={S.searchRow}>
+
+          <input
+            value={search}
+            onChange={e=>setSearch(e.target.value)}
+            placeholder="Search courses..."
+            style={S.search}
+          />
+
+          <button
+            onClick={()=>setFreeOnly(!freeOnly)}
+            style={S.filterBtn}
+          >
+            {freeOnly ? "✓ Free only":"Free only"}
+          </button>
+
         </div>
 
-        <div style={{ background: "rgba(255,107,53,0.05)", border: "1px solid rgba(255,107,53,0.15)", borderRadius: 10, padding: "12px 16px", display: "flex", gap: 10 }}>
-          <span>⭐</span>
-          <span style={{ fontSize: 13, color: "#AAA" }}>
-            Completing a course on ARISE adds a <strong style={{ color: "#FF6B35" }}>verified skill badge</strong> to your TrustID profile and awards ECS points toward your score.
-          </span>
-        </div>
-
-        <div style={{ display: "flex", gap: 8 }}>
-          {["all", "free", "enrolled"].map(f => (
-            <button key={f} onClick={() => setFilter(f)} style={{ background: filter === f ? "rgba(255,107,53,0.15)" : "rgba(255,255,255,0.04)", border: `1px solid ${filter === f ? "rgba(255,107,53,0.35)" : "rgba(255,255,255,0.08)"}`, color: filter === f ? "#FF6B35" : "#888", borderRadius: 20, padding: "7px 16px", fontSize: 13, fontWeight: filter === f ? 700 : 500, cursor: "pointer", fontFamily: "Sora, sans-serif", transition: "all 0.2s" }}>
-              {f.charAt(0).toUpperCase() + f.slice(1)}
+        <div style={S.categoryRow}>
+          {CATEGORIES.map(c=>(
+            <button
+              key={c}
+              onClick={()=>setFilter(c)}
+              style={{
+                ...S.catBtn,
+                background: filter===c ? "#FF6B35":"transparent",
+                color: filter===c ? "#fff":"#aaa"
+              }}
+            >
+              {c}
             </button>
           ))}
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14 }}>
-          {filtered.map((course, i) => (
-            <div key={course.id} className="course-card" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: 20, transition: "all 0.2s", animation: `fadeUp 0.4s ${i * 0.05}s ease both` }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-                <span style={{ fontSize: 10, background: course.free ? "rgba(78,205,196,0.1)" : "rgba(255,215,61,0.1)", border: `1px solid ${course.free ? "rgba(78,205,196,0.2)" : "rgba(255,215,61,0.2)"}`, borderRadius: 12, padding: "2px 8px", color: course.free ? "#4ECDC4" : "#FFD93D", fontWeight: 700, fontFamily: "DM Mono, monospace" }}>
-                  {course.free ? "FREE" : "PAID"}
-                </span>
-                <span style={{ fontSize: 11, color: "#FF6B35", fontFamily: "DM Mono, monospace", fontWeight: 700 }}>+{course.ecs} ECS</span>
+        <div style={S.grid}>
+
+          {filtered.map(course=>{
+
+            const isEnrolled = enrolled.includes(course.id);
+
+            return(
+              <div key={course.id} style={S.card}>
+
+                <div style={S.cardTop}>
+                  <span style={S.badge}>
+                    {course.free ? "FREE":"PAID"}
+                  </span>
+
+                  <span style={S.ecs}>
+                    +{course.ecs} ECS
+                  </span>
+                </div>
+
+                <div style={S.courseTitle}>
+                  {course.title}
+                </div>
+
+                <div style={S.provider}>
+                  {course.provider}
+                </div>
+
+                <div style={S.meta}>
+                  ⏱ {course.duration} • {course.level}
+                </div>
+
+                <div style={S.skill}>
+                  Skill: {course.skill}
+                </div>
+
+                <div style={{display:"flex",gap:8}}>
+
+                  {isEnrolled ? (
+                    <div style={S.enrolled}>✓ Enrolled</div>
+                  ) : (
+                    <button
+                      onClick={()=>setEnrolled(e=>[...e,course.id])}
+                      style={S.enrollBtn}
+                    >
+                      Enroll
+                    </button>
+                  )}
+
+                  <a
+                    href={course.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={S.linkBtn}
+                  >
+                    ↗
+                  </a>
+
+                </div>
+
               </div>
-              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 6 }}>{course.title}</div>
-              <div style={{ fontSize: 12, color: "#888", marginBottom: 4 }}>{course.provider}</div>
-              <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
-                <span style={{ fontSize: 11, color: "#666" }}>⏱ {course.duration}</span>
-                <span style={{ fontSize: 11, color: "#666" }}>· {course.level}</span>
-              </div>
-              <div style={{ fontSize: 12, color: "#4ECDC4", marginBottom: 14 }}>Skill unlocked: {course.skill}</div>
-              <div style={{ display: "flex", gap: 8 }}>
-                {enrolled.includes(course.id) ? (
-                  <div style={{ flex: 1, background: "rgba(78,205,196,0.1)", border: "1px solid rgba(78,205,196,0.2)", borderRadius: 8, padding: "9px", textAlign: "center", fontSize: 12, color: "#4ECDC4", fontWeight: 700 }}>✓ Enrolled</div>
-                ) : (
-                  <button onClick={() => setEnrolled(e => [...e, course.id])} style={{ flex: 1, background: "rgba(255,107,53,0.1)", border: "1px solid rgba(255,107,53,0.2)", color: "#FF6B35", borderRadius: 8, padding: "9px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "Sora, sans-serif" }}>
-                    Enroll Now
-                  </button>
-                )}
-                <a href={course.url} target="_blank" rel="noreferrer" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#888", borderRadius: 8, padding: "9px 12px", fontSize: 12, textDecoration: "none" }}>↗</a>
-              </div>
-            </div>
-          ))}
+            )
+          })}
+
         </div>
+
       </div>
     </div>
   );
 }
 
+export function VerificationTracker(){
 
-// ─── VERIFICATION TRACKER ─────────────────────────────────────────────────────
-export function VerificationTracker() {
-  const STEPS = [
-    { id: "email", label: "Email Verification", desc: "Verify your email address", ecs: 25, icon: "✉️", action: "/settings", actionLabel: "Resend email" },
-    { id: "identity", label: "Identity Document", desc: "Upload SA ID, passport, or drivers licence", ecs: 50, icon: "🪪", action: "/onboarding/identity", actionLabel: "Upload ID" },
-    { id: "qualification", label: "Qualification", desc: "Upload academic certificate for verification", ecs: 25, icon: "🎓", action: "/profile", actionLabel: "Add qualification" },
-    { id: "skill", label: "Skills Assessment", desc: "Pass a skills assessment to verify a claimed skill", ecs: 15, icon: "⚡", action: "/skills", actionLabel: "Assess a skill" },
-    { id: "work", label: "Work Experience", desc: "Get a work experience entry confirmed by employer", ecs: 20, icon: "💼", action: "/profile", actionLabel: "Add experience" },
-    { id: "business", label: "Business Registration", desc: "Complete LaunchPad to register your business", ecs: 100, icon: "🚀", action: "/launchpad", actionLabel: "Start LaunchPad" },
-  ];
+  return(
+    <div style={{padding:40}}>
 
-  return (
-    <div style={styles.page}>
-      <div style={styles.inner}>
-        <h1 style={styles.title}>Verification Centre</h1>
-        <p style={{ fontSize: 14, color: "#888" }}>Each verified item strengthens your TrustID and awards ECS points</p>
+      <h1>Verification Centre</h1>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {STEPS.map((step, i) => (
-            <div key={step.id} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "18px 20px", display: "flex", gap: 16, alignItems: "center" }}>
-              <div style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>{step.icon}</div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 3 }}>{step.label}</div>
-                <div style={{ fontSize: 13, color: "#888" }}>{step.desc}</div>
-              </div>
-              <div style={{ display: "flex", gap: 12, alignItems: "center", flexShrink: 0 }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#FF6B35", fontFamily: "DM Mono, monospace" }}>+{step.ecs} ECS</span>
-                <Link to={step.action} style={{ background: "rgba(255,107,53,0.1)", border: "1px solid rgba(255,107,53,0.25)", color: "#FF6B35", borderRadius: 7, padding: "7px 14px", textDecoration: "none", fontSize: 12, fontWeight: 700, fontFamily: "Sora, sans-serif" }}>
-                  {step.actionLabel} →
-                </Link>
-              </div>
-            </div>
-          ))}
+      {[
+        {label:"Email Verification",ecs:25,action:"/settings"},
+        {label:"Identity Document",ecs:50,action:"/onboarding/identity"},
+        {label:"Qualification",ecs:25,action:"/profile"},
+        {label:"Skills Assessment",ecs:15,action:"/skills"},
+        {label:"Work Experience",ecs:20,action:"/profile"},
+        {label:"Business Registration",ecs:100,action:"/launchpad"}
+      ].map(step=>(
+        <div key={step.label} style={S.verifyRow}>
+
+          <div style={{flex:1}}>
+            {step.label}
+          </div>
+
+          <div>+{step.ecs} ECS</div>
+
+          <Link to={step.action}>
+            Go →
+          </Link>
+
         </div>
-      </div>
+      ))}
+
     </div>
   );
 }
 
-const styles = {
-  page: { fontFamily: "'Sora', sans-serif", background: "#0A0A0F", color: "#E8E8F0", minHeight: "100vh", padding: "32px 24px" },
-  inner: { maxWidth: 1000, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 },
-  title: { fontSize: "clamp(22px, 3vw, 30px)", fontWeight: 800, marginBottom: 4 },
+const S={
+
+page:{
+background:"#0A0A0F",
+color:"#E8E8F0",
+minHeight:"100vh"
+},
+
+inner:{
+maxWidth:1100,
+margin:"0 auto",
+padding:30
+},
+
+title:{
+fontSize:30,
+fontWeight:800
+},
+
+searchRow:{
+display:"flex",
+gap:10,
+marginTop:20
+},
+
+search:{
+flex:1,
+padding:10,
+borderRadius:8,
+border:"1px solid #333",
+background:"#111",
+color:"#fff"
+},
+
+filterBtn:{
+padding:"10px 16px",
+borderRadius:8,
+background:"#222",
+border:"1px solid #333",
+color:"#fff",
+cursor:"pointer"
+},
+
+categoryRow:{
+display:"flex",
+gap:8,
+marginTop:12,
+flexWrap:"wrap"
+},
+
+catBtn:{
+padding:"6px 12px",
+borderRadius:20,
+border:"1px solid #333",
+cursor:"pointer"
+},
+
+grid:{
+display:"grid",
+gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",
+gap:16,
+marginTop:20
+},
+
+card:{
+background:"#111",
+padding:18,
+borderRadius:12,
+border:"1px solid #333"
+},
+
+cardTop:{
+display:"flex",
+justifyContent:"space-between"
+},
+
+badge:{
+fontSize:10,
+background:"#333",
+padding:"2px 8px",
+borderRadius:12
+},
+
+ecs:{
+color:"#FF6B35",
+fontWeight:700
+},
+
+courseTitle:{
+fontWeight:700,
+marginTop:8
+},
+
+provider:{
+fontSize:12,
+color:"#aaa"
+},
+
+meta:{
+fontSize:12,
+color:"#777",
+marginTop:6
+},
+
+skill:{
+fontSize:12,
+color:"#4ECDC4",
+marginTop:8
+},
+
+enrollBtn:{
+flex:1,
+padding:8,
+borderRadius:8,
+background:"#FF6B35",
+border:"none",
+color:"#fff",
+cursor:"pointer"
+},
+
+linkBtn:{
+padding:"8px 12px",
+borderRadius:8,
+background:"#222",
+border:"1px solid #333",
+textDecoration:"none",
+color:"#aaa"
+},
+
+enrolled:{
+flex:1,
+padding:8,
+borderRadius:8,
+background:"#0a3",
+textAlign:"center"
+},
+
+statBox:{
+background:"#111",
+padding:"10px 16px",
+borderRadius:10
+},
+
+statValue:{
+fontSize:20,
+fontWeight:800
+},
+
+statLabel:{
+fontSize:10,
+color:"#777"
+},
+
+verifyRow:{
+display:"flex",
+gap:20,
+borderBottom:"1px solid #333",
+padding:12
+}
+
 };
-
-export default CoursesPage;

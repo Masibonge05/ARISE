@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../services/api";
+import { useToast } from "../../hooks/useToast";
 
 const SKILL_CATEGORIES = ["Technical","Soft","Language","Tool","Industry"];
 const PREDEFINED_SKILLS = {
@@ -102,6 +103,7 @@ function AssessmentModal({ skill, onClose, onComplete }) {
 
 export default function SkillsCentre() {
   const { user } = useAuth();
+  const toast = useToast();
   const [skills, setSkills] = useState([]);
   const [activeCategory, setActiveCategory] = useState("Technical");
   const [newSkill, setNewSkill] = useState("");
@@ -125,6 +127,7 @@ export default function SkillsCentre() {
       const res = await api.post("/users/me/skills", { skill_name: skillName, category, level: "intermediate" });
       setSkills((s) => [...s, { id: res.data.skill_id || Date.now().toString(), skill_name: skillName, category, verification_source: "self_claimed" }]);
       setNewSkill("");
+      toast.ecs(15, `${skillName} added to your TrustID!`);
     } catch {}
   };
 

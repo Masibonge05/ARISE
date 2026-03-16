@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
+import { useToast } from "../../hooks/useToast";
 
 const LANGUAGES = ["English", "isiZulu", "Afrikaans", "Sesotho", "Xhosa", "Sepedi", "Setswana"];
 
@@ -30,6 +31,7 @@ function Toggle({ label, desc, value, onChange }) {
 
 export default function Settings() {
   const { user, logout, updateUser } = useAuth();
+  const toast = useToast();
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -61,7 +63,8 @@ export default function Settings() {
       updateUser({ preferred_language: prefs.preferred_language, is_available: prefs.is_available, is_visible_to_investors: prefs.is_visible_to_investors });
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
-    } catch {}
+      toast.success("Settings saved!");
+    } catch { toast.error("Failed to save. Please try again."); }
     finally { setSaving(false); }
   };
 

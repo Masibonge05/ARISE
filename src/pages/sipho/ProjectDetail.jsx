@@ -3,8 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import api from "../../services/api";
 
-// ─── PROJECT DETAIL ────────────────────────────────────────────────────────────
-export function ProjectDetail() {
+export default function ProjectDetail() {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const [project, setProject] = useState(null);
@@ -130,107 +129,3 @@ const dStyles = {
   label: { display: "block", fontSize: 12, color: "#888", marginBottom: 6 },
   input: { width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "10px 14px", color: "#E8E8F0", fontFamily: "Sora, sans-serif", fontSize: 13, outline: "none" },
 };
-
-
-// ─── EARNINGS DASHBOARD ────────────────────────────────────────────────────────
-export function EarningsDashboard() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetch = async () => {
-      try {
-        const res = await api.get("/freelance/my/earnings");
-        setData(res.data);
-      } catch { setData(MOCK_EARNINGS); }
-      finally { setLoading(false); }
-    };
-    fetch();
-  }, []);
-
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (!active || !payload?.length) return null;
-    return <div style={{ background: "#1A1A2E", border: "1px solid rgba(78,205,196,0.3)", borderRadius: 8, padding: "8px 12px" }}><div style={{ fontSize: 11, color: "#888" }}>{label}</div><div style={{ fontSize: 16, fontWeight: 800, color: "#4ECDC4" }}>R{payload[0].value?.toLocaleString()}</div></div>;
-  };
-
-  if (loading) return <div style={eStyles.loading}>💰 Loading earnings...</div>;
-
-  return (
-    <div style={eStyles.page}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap'); * { box-sizing:border-box; } @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }`}</style>
-      <div style={eStyles.inner}>
-        <div style={{ animation: "fadeUp 0.4s ease forwards" }}>
-          <h1 style={eStyles.title}>Earnings Dashboard</h1>
-          <p style={{ fontSize: 14, color: "#888" }}>All payments protected by ARISE escrow · {data?.currency || "ZAR"}</p>
-        </div>
-
-        {/* Top stats */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 14, animation: "fadeUp 0.4s 0.1s ease both" }}>
-          {[
-            { label: "Total Earned", value: `R${(data?.total_earned || 0).toLocaleString()}`, color: "#4ECDC4", icon: "💰" },
-            { label: "Projects Done", value: data?.completed_projects || 0, color: "#FF6B35", icon: "✅" },
-            { label: "Pending Release", value: `R${(data?.pending_release || 0).toLocaleString()}`, color: "#FFD93D", icon: "🔒" },
-            { label: "Avg per Project", value: data?.completed_projects > 0 ? `R${Math.round((data?.total_earned || 0) / data.completed_projects).toLocaleString()}` : "—", color: "#A8E6CF", icon: "📊" },
-          ].map((s) => (
-            <div key={s.label} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: 18 }}>
-              <div style={{ fontSize: 22, marginBottom: 8 }}>{s.icon}</div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: s.color }}>{s.value}</div>
-              <div style={{ fontSize: 11, color: "#666", fontFamily: "DM Mono, monospace" }}>{s.label.toUpperCase()}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* Earnings chart */}
-        {data?.chart_data?.length > 0 && (
-          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: 24, animation: "fadeUp 0.4s 0.15s ease both" }}>
-            <div style={{ fontSize: 11, color: "#555", fontFamily: "DM Mono, monospace", fontWeight: 700, letterSpacing: 2, marginBottom: 16 }}>EARNINGS OVER TIME</div>
-            <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={data.chart_data} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
-                <defs><linearGradient id="earnGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#4ECDC4" stopOpacity={0.25} /><stop offset="95%" stopColor="#4ECDC4" stopOpacity={0} /></linearGradient></defs>
-                <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#555", fontFamily: "DM Mono" }} />
-                <YAxis tick={{ fontSize: 10, fill: "#555" }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Area type="monotone" dataKey="amount" stroke="#4ECDC4" strokeWidth={2} fill="url(#earnGrad)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-
-        {/* Transaction history */}
-        <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: 24, animation: "fadeUp 0.4s 0.2s ease both" }}>
-          <div style={{ fontSize: 11, color: "#555", fontFamily: "DM Mono, monospace", fontWeight: 700, letterSpacing: 2, marginBottom: 16 }}>TRANSACTION HISTORY</div>
-          {data?.history?.length > 0 ? (
-            data.history.map((h, i) => (
-              <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: 14 }}>{h.project_title}</div>
-                  <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-                    {h.client_rating && <span style={{ fontSize: 11, color: "#FFD93D" }}>{"★".repeat(h.client_rating)}</span>}
-                    {h.completed_at && <span style={{ fontSize: 11, color: "#555", fontFamily: "DM Mono, monospace" }}>{new Date(h.completed_at).toLocaleDateString("en-ZA")}</span>}
-                  </div>
-                </div>
-                <div style={{ fontWeight: 800, fontSize: 16, color: "#4ECDC4" }}>+R{h.amount?.toLocaleString()}</div>
-              </div>
-            ))
-          ) : (
-            <div style={{ textAlign: "center", padding: 40, color: "#555" }}>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>💰</div>
-              <div style={{ fontSize: 13 }}>No earnings yet. <Link to="/freelance" style={{ color: "#4ECDC4", textDecoration: "none" }}>Find projects →</Link></div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-const MOCK_EARNINGS = { total_earned: 24800, completed_projects: 6, pending_release: 3500, currency: "ZAR", chart_data: [{ month: "Oct", amount: 1500 },{ month: "Nov", amount: 3200 },{ month: "Dec", amount: 4100 },{ month: "Jan", amount: 5800 },{ month: "Feb", amount: 6200 },{ month: "Mar", amount: 4000 }], history: [{ project_title: "Logo for FreshMart SA", amount: 5800, client_rating: 5, completed_at: new Date(Date.now() - 86400000 * 7).toISOString() },{ project_title: "UI design for MobiPay", amount: 7200, client_rating: 5, completed_at: new Date(Date.now() - 86400000 * 21).toISOString() },{ project_title: "Brand identity — Thandi's Bakery", amount: 3500, client_rating: 4, completed_at: new Date(Date.now() - 86400000 * 35).toISOString() }] };
-
-const eStyles = {
-  page: { fontFamily: "'Sora', sans-serif", background: "#0A0A0F", color: "#E8E8F0", minHeight: "100vh", padding: "32px 24px" },
-  inner: { maxWidth: 900, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 },
-  loading: { display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "Sora, sans-serif", color: "#4ECDC4", background: "#0A0A0F" },
-  title: { fontSize: "clamp(22px, 3vw, 30px)", fontWeight: 800, marginBottom: 4 },
-};
-
-export default ProjectDetail;

@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import api from "../../services/api";
+import { useToast } from "../../hooks/useToast";
 
-// ─── MENTOR PROFILE ───────────────────────────────────────────────────────────
-export function MentorProfile() {
+export default function MentorProfile() {
   const { mentorId } = useParams();
   const [mentor, setMentor] = useState(null);
   const [loading, setLoading] = useState(true);
   const [booking, setBooking] = useState(false);
   const [bookingDate, setBookingDate] = useState("");
   const [booked, setBooked] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
     const fetch = async () => {
@@ -28,7 +29,8 @@ export function MentorProfile() {
     try {
       await api.post("/mentors/sessions/book", { mentor_id: mentorId, scheduled_at: bookingDate, focus_areas: mentor?.mentorship_areas?.slice(0, 2) || [] });
       setBooked(true);
-    } catch { setBooked(true); }
+      toast.success("Session booked! +25 ECS on completion.");
+    } catch { setBooked(true); toast.error("Could not book — please try again."); }
     finally { setBooking(false); }
   };
 
@@ -131,37 +133,3 @@ export function MentorProfile() {
 }
 
 const MOCK_MENTOR = { id: "m1", mentor_name: "Thandi Mokoena", current_title: "CEO", current_company: "Vodacom Enterprise", industry: "Telecommunications", years_experience: 18, bio: "Serial entrepreneur and corporate executive with 18 years experience across SA's tech and entrepreneurship ecosystem. Passionate about empowering young African women in business.", mentorship_areas: ["Fundraising", "Pitch Coaching", "Strategy", "Financial Planning", "Market Entry"], preferred_stages: ["early", "growth"], preferred_sectors: ["Technology", "Fashion", "Retail"], languages: ["English", "isiZulu", "Sesotho"], average_rating: 4.9, total_sessions: 48, total_mentees: 23, is_bbee_linked: true, ed_rate_per_session: 1500, session_duration_minutes: 60, sessions_per_month: 8, is_available: true, available_days: ["monday", "wednesday", "friday"] };
-
-
-// ─── INVESTOR PROFILE ─────────────────────────────────────────────────────────
-export function InvestorProfile() {
-  const { investorId } = useParams();
-
-  return (
-    <div style={styles.page}>
-      <div style={styles.inner}>
-        <Link to="/investors" style={{ fontSize: 13, color: "#666", textDecoration: "none", display: "block", marginBottom: 24 }}>← Back to Investors</Link>
-        <div style={styles.card}>
-          <div style={{ fontSize: 32, marginBottom: 16 }}>📈</div>
-          <h2 style={{ fontWeight: 800, marginBottom: 8 }}>Verified Investor Profile</h2>
-          <p style={{ fontSize: 14, color: "#888", lineHeight: 1.7 }}>
-            Investor profile details are only accessible after you accept their interest request. This protects both parties and ensures all connections are intentional.
-          </p>
-          <Link to="/investors" style={{ display: "inline-block", marginTop: 16, background: "#FFD93D", color: "#0A0A0F", textDecoration: "none", padding: "10px 20px", borderRadius: 8, fontSize: 13, fontWeight: 800, fontFamily: "Sora, sans-serif" }}>
-            View Investor Interests →
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-const styles = {
-  page: { fontFamily: "'Sora', sans-serif", background: "#0A0A0F", color: "#E8E8F0", minHeight: "100vh", padding: "32px 24px" },
-  inner: { maxWidth: 900, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 },
-  loading: { display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "Sora, sans-serif", color: "#4ECDC4", background: "#0A0A0F" },
-  card: { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: 24 },
-  cardTitle: { fontSize: 11, color: "#555", fontFamily: "DM Mono, monospace", fontWeight: 700, letterSpacing: 2, marginBottom: 14 },
-};
-
-export default MentorProfile;
