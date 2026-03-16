@@ -1,4 +1,5 @@
 from sqlalchemy import (
+    Boolean,
     Column, String, DateTime, Integer, Float, ForeignKey, JSON, Text
 )
 from sqlalchemy.orm import relationship
@@ -96,7 +97,3 @@ class MicroLender(Base):
 
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, server_default=func.now())
-
-    # Avoid reserved word
-    from sqlalchemy import Boolean
-    is_active = Column(Boolean, default=True)
