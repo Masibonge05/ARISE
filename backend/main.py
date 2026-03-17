@@ -33,15 +33,12 @@ except Exception:
     def track_api_request(*args, **kwargs):
         pass
 
-
 # ─── Logging ──────────────────────────────────────────────────────────────
 logging.basicConfig(
     level=logging.DEBUG if settings.DEBUG else logging.INFO,
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
 )
-
 logger = logging.getLogger("arise")
-
 
 # ─── Lifespan (Startup / Shutdown) ───────────────────────────────────────
 @asynccontextmanager
@@ -61,7 +58,6 @@ async def lifespan(app: FastAPI):
     yield
 
     logger.info("🛑 ARISE API shutting down...")
-
 
 # ─── FastAPI App ─────────────────────────────────────────────────────────
 app = FastAPI(
@@ -84,11 +80,8 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-
 # ─── CORS Configuration ──────────────────────────────────────────────────
-# This fixes your error:
-# "No Access-Control-Allow-Origin header"
-
+# Add both local dev and deployed frontend URLs
 allowed_origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
@@ -97,18 +90,17 @@ allowed_origins = [
 if settings.FRONTEND_URL:
     allowed_origins.append(settings.FRONTEND_URL)
 
+# Add middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
+    allow_origins=allowed_origins,  # allow your frontend
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],            # GET, POST, PUT, DELETE, etc.
+    allow_headers=["*"],            # headers like Authorization
 )
-
 
 # ─── API Prefix ──────────────────────────────────────────────────────────
 API_PREFIX = "/api/v1"
-
 
 # ─── Register Routers ────────────────────────────────────────────────────
 app.include_router(auth.router,        prefix=f"{API_PREFIX}/auth",        tags=["Authentication"])
@@ -126,14 +118,11 @@ app.include_router(messages.router,    prefix=f"{API_PREFIX}/messages",    tags=
 app.include_router(govlink.router,     prefix=f"{API_PREFIX}/govlink",     tags=["GovLink"])
 app.include_router(safety.router,      prefix=f"{API_PREFIX}/safety",      tags=["Safety"])
 
-
 # ─── API Monitoring Middleware (Huawei APM) ──────────────────────────────
 @app.middleware("http")
 async def apm_tracking_middleware(request, call_next):
     start = time.time()
-
     response = await call_next(request)
-
     duration_ms = (time.time() - start) * 1000
 
     try:
@@ -148,7 +137,6 @@ async def apm_tracking_middleware(request, call_next):
 
     return response
 
-
 # ─── Health Endpoints ────────────────────────────────────────────────────
 @app.get("/", tags=["Health"])
 async def root():
@@ -159,7 +147,6 @@ async def root():
         "message": "Empowering South Africa's youth and women entrepreneurs",
     }
 
-
 @app.get("/health", tags=["Health"])
 async def health_check():
     return {
@@ -169,12 +156,10 @@ async def health_check():
         "debug_mode": settings.DEBUG,
     }
 
-
 # ─── Global Exception Handler ────────────────────────────────────────────
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
     logger.error(f"Unhandled exception: {exc}", exc_info=True)
-
     return JSONResponse(
         status_code=500,
         content={
@@ -183,11 +168,9 @@ async def global_exception_handler(request, exc):
         },
     )
 
-
 # ─── Run Server Directly ─────────────────────────────────────────────────
 if __name__ == "__main__":
     import uvicorn
-
     uvicorn.run(
         "backend.main:app",
         host="0.0.0.0",
