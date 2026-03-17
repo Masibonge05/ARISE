@@ -1,7 +1,8 @@
 import axios from "axios";
 
+// Set base URL to Render backend
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || "http://localhost:8000/api/v1",
+  baseURL: process.env.REACT_APP_API_URL || "https://arise-backend-7w2u.onrender.com/api/v1",
   timeout: 30000,
   headers: { "Content-Type": "application/json" },
 });
