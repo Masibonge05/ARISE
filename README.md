@@ -1,41 +1,61 @@
-# 🚀 ARISE Platform
+# 🚀 ARISE – Accelerated Revenue & Inclusive Startup Engine
 
-ARISE is a full-stack platform designed to empower users through mentorship, AI-powered insights, and digital tools. It connects users with mentors, tracks progress, and provides intelligent recommendations. It is Users digital Identity.
+> Building the trust infrastructure South Africa’s entrepreneurs deserve.
 
 ---
 
-## 🌟 Features
+## 🌍 Overview
 
-- 👩‍🏫 Mentor discovery & session booking
-- 📊 AI-powered session insights (Huawei NLP integration)
-- 🔐 Authentication & secure API
-- 📁 File upload (OCR / document processing)
-- 📈 ECS (Engagement Credit System) tracking
-- 🌐 Full-stack deployment (FastAPI + React)
+**ARISE** is an AI-powered platform designed to empower youth and women by solving:
+- 32% youth unemployment  
+- Lack of credit history and verified identity  
+- R7.8B unclaimed B-BBEE Enterprise Development funding  
+
+It provides a **digital trust ecosystem** connecting users to jobs, funding, mentorship, and opportunities.
+
+---
+
+## 🎯 Challenge
+
+CODE4MZANSI Huawei Competition  
+**Theme:** Youth & Women Enterprise Empowerment  
+
+---
+
+## 👨‍💻 Team
+
+**Team:** JUST ENGINEER  
+**Organization:** University of Johannesburg  
+
+**Masibonge Shabalala**  
+📧 shabalalamasibonge@gmail.com  
+📞 +27 71 091 3224  
+
+---
+
+## 💡 Core Features
+
+- 🔐 **TrustID** – Verified digital identity (Huawei OCR)  
+- 📊 **ECS Score (0–850)** – Credit score for the unbanked  
+- 🛡️ **AI Job Safety** – Scam detection (Huawei NLP)  
+- 🚀 **FundMatch** – AI grant matching (47+ programmes)  
+- 🤝 **MentorNet & InvestorConnect** – Safe mentorship & investment  
+
+---
+
+## ☁️ Huawei Cloud Integration
+
+Powered by 8 services:  
+**ModelArts · OCR · NLP · GES · OBS · SIS · APM · SMN**
 
 ---
 
 ## 🏗️ Tech Stack
 
-### Frontend
-- React (Create React App)
-- Axios
-- React Router
-
-### Backend
-- FastAPI (Python)
-- SQLite (or PostgreSQL-ready)
-- JWT Authentication
-
-### DevOps
-- Docker & Docker Compose
-- Render (Backend Hosting)
-- Vercel (Frontend Hosting)
+**Frontend:** React 18, Axios  
+**Backend:** FastAPI, SQLAlchemy, JWT  
+**Database:** PostgreSQL / SQLite  
 
 ---
-
-# Author
-MASIBONGE SHABALALA
-FINAL YEAR STUDENT AT THE University of Johannesburg studying BEng Electrical and Electronic Engineering
 
 
